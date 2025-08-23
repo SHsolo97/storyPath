@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -36,11 +36,14 @@ jobs:
           languages: ${{ matrix.language }}
 
       - name: Install dependencies (root)
-        run: npm --workspaces=false ci || npm ci
+        env:
+          HUSKY: '0'
+        run: npm install --no-audit --no-fund
 
       - name: Install workspace dependencies
-        run: |
-          npm --workspaces install
+        env:
+          HUSKY: '0'
+        run: npm --workspaces install --include-workspace-root --no-audit --no-fund
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
