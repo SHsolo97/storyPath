@@ -32,7 +32,7 @@ jobs:
         working-directory: backend/services/content
         env:
           HUSKY: '0'
-        run: npm install --no-audit --no-fund || true
+        run: npm install --no-audit --no-fund
       - name: Typecheck content service
         working-directory: backend/services/content
         run: npx tsc -p tsconfig.json --noEmit
