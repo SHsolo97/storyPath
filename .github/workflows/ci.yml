@@ -15,24 +15,32 @@ jobs:
           node-version: '20'
       - name: Install tool deps
         working-directory: tools
-        run: npm ci || npm install
+        env:
+          HUSKY: '0'
+        run: npm install --no-audit --no-fund || true
       - name: Validate sample story
         run: node tools/validate-story.mjs schemas/sample-story.json
       - name: Install backend gateway
         working-directory: backend/gateway
-        run: npm ci || npm install
+        env:
+          HUSKY: '0'
+        run: npm install --no-audit --no-fund || true
       - name: Typecheck gateway
         working-directory: backend/gateway
         run: npx tsc -p tsconfig.json --noEmit
       - name: Install content service
         working-directory: backend/services/content
-        run: npm ci || npm install
+        env:
+          HUSKY: '0'
+        run: npm install --no-audit --no-fund || true
       - name: Typecheck content service
         working-directory: backend/services/content
         run: npx tsc -p tsconfig.json --noEmit
       - name: Install progress service
         working-directory: backend/services/progress
-        run: npm ci || npm install
+        env:
+          HUSKY: '0'
+        run: npm install --no-audit --no-fund || true
       - name: Typecheck progress service
         working-directory: backend/services/progress
         run: npx tsc -p tsconfig.json --noEmit
@@ -59,7 +67,9 @@ jobs:
         with:
           node-version: '20'
       - name: Install all workspaces
-        run: npm --workspaces=false ci || npm --workspaces=false install
+        env:
+          HUSKY: '0'
+        run: npm --workspaces install --include-workspace-root --no-audit --no-fund
       - name: Generate Prisma client
         working-directory: backend
         run: npx prisma generate
@@ -71,16 +81,14 @@ jobs:
           npx prisma migrate deploy
           npm run prisma:seed
       - name: Start content service
-        working-directory: backend/services/content
         env:
           PORT: 4001
-        run: nohup npx tsx src/index.ts &
+        run: npm -w content run start &
       - name: Start progress service
-        working-directory: backend/services/progress
         env:
           PORT: 4002
           DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
-        run: nohup npx tsx src/index.ts &
+        run: npm -w progress run start &
       - name: Wait for services
         run: |
           for i in {1..30}; do

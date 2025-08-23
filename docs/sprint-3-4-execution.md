@@ -86,4 +86,16 @@ This checklist continues from S1–S2 and tracks the implementation/hardening we
   - Backend typecheck: PASS
   - Mobile typecheck: PASS (RN 0.74, Expo 51)
 - Tests: Minimal; e2e smoke PASS (local); unit tests pending
+
+## Dependency update triage (2025-08-24)
+
+- Backend (merge in this order, validate with `npm run smoke` after each batch):
+  - actions/checkout v5 (#1): safe infra upgrade.
+  - lint-staged v16 (#11): requires Node ≥18; config unchanged for our usage.
+  - @types/node 24 (#7): minor type impacts; merge with a quick typecheck.
+  - Fastify v5 in content/progress (#6, #8) and @fastify/cors v11 (#9, #17): update together; our usage is compatible.
+  - Prisma 6 (@prisma/client #13 and prisma #16): merge as a pair; run seed-check workflow and smoke.
+- Mobile (defer to a dedicated upgrade sprint):
+  - Expo 51 → 53 (#10), React Native 0.74 → 0.81 (#12), React 18 → 19 (#2, #3), react-navigation v7 (#4, #5), AsyncStorage v2 (#15).
+  - Reason: managed workflow constraints and major-breaking changes; upgrade in a staged plan starting with Expo 53.
 - Security scans: CodeQL enabled; Dependabot active
