@@ -83,12 +83,14 @@ jobs:
       - name: Start content service
         env:
           PORT: 4001
-        run: npm -w content run start &
+        run: |
+          nohup npm -w content run start &
       - name: Start progress service
         env:
           PORT: 4002
           DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
-        run: npm -w progress run start &
+        run: |
+          nohup npm -w progress run start &
       - name: Wait for services
         run: |
           for i in {1..30}; do
