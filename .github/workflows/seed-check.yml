@@ -1,0 +1,37 @@
+name: Seed Check
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm --workspaces install
+      - name: Start Postgres
+        run: |
+          docker run -d --name pg -e POSTGRES_USER=storypath -e POSTGRES_PASSWORD=storypath -e POSTGRES_DB=storypath -p 5432:5432 postgres:16-alpine
+          echo "postgres started"
+      - name: Wait for DB
+        run: |
+          for i in {1..30}; do
+            (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && echo connected && break
+            echo waiting...; sleep 2
+          done
+      - name: Run Prisma migrate and seed
+        env:
+          DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
+        working-directory: backend
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run prisma:seed
+      - name: Stop Postgres
+        if: always()
+        run: docker rm -f pg

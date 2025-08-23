@@ -6,6 +6,7 @@ export type LastRead = {
   chapterId: string
   nodeId: string
   updatedAt: number
+  variables?: Record<string, any>
 }
 
 const keys = {

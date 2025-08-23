@@ -1,9 +1,18 @@
 import Fastify from 'fastify'
+import dotenv from 'dotenv'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const server = Fastify({ logger: true })
+
+// Load env from backend/.env to keep local dev consistent
+try {
+  // __dirname equivalent for ESM
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url))
+  const backendRoot = path.resolve(scriptDir, '..', '..', '..')
+  dotenv.config({ path: path.resolve(backendRoot, '.env'), override: true })
+} catch {}
 
 function getRepoRoot() {
   const scriptDir = path.dirname(fileURLToPath(import.meta.url))

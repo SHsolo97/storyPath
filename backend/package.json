@@ -9,7 +9,12 @@
   "scripts": {
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "node --loader ts-node/esm prisma/seed.ts"
+  },
+  "engines": {
+    "node": ">=20 <23",
+    "npm": ">=9"
   },
   "devDependencies": {
     "prisma": "^5.18.0",

@@ -36,3 +36,59 @@ jobs:
       - name: Typecheck progress service
         working-directory: backend/services/progress
         run: npx tsc -p tsconfig.json --noEmit
+
+  smoke:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: storypath
+          POSTGRES_PASSWORD: storypath
+          POSTGRES_DB: storypath
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U storypath -d storypath"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install all workspaces
+        run: npm --workspaces=false ci || npm --workspaces=false install
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npx prisma generate
+      - name: Apply migrations and seed
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
+        run: |
+          npx prisma migrate deploy
+          npm run prisma:seed
+      - name: Start content service
+        working-directory: backend/services/content
+        env:
+          PORT: 4001
+        run: nohup npx tsx src/index.ts &
+      - name: Start progress service
+        working-directory: backend/services/progress
+        env:
+          PORT: 4002
+          DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
+        run: nohup npx tsx src/index.ts &
+      - name: Wait for services
+        run: |
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4001/health && curl -fsS http://127.0.0.1:4002/health && break || true
+            echo waiting...; sleep 2
+          done
+      - name: Run smoke test
+        env:
+          CONTENT_URL: http://127.0.0.1:4001
+          PROGRESS_URL: http://127.0.0.1:4002
+        run: npx tsx tools/smoke.e2e.ts

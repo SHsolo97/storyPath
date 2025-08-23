@@ -5,36 +5,50 @@ import {
   DarkTheme
 } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import React from 'react'
+import React, { type FC } from 'react'
 import { Text, View, useColorScheme, FlatList, Pressable } from 'react-native'
 import { useEffect, useState } from 'react'
 import { Analytics, Crash } from './src/analytics'
+import { API, DEV_USER_ID } from './src/config/env'
+import {
+  step as sampleStep,
+  type State as ReaderState,
+  type SampleStory as StoryDetail,
+  findChapter as sampleFindChapter
+} from './src/reader/sampleInterpreter'
 import { getLastRead, setLastRead } from './src/storage/local'
 
-const Stack = createNativeStackNavigator()
+type Story = { id: string; title: string; description?: string }
 
-function LibraryScreen({ navigation }: any) {
-  const [stories, setStories] = useState<any[]>([])
+type RootStackParamList = {
+  Library: undefined
+  StoryDetail: undefined
+  Reader: { storyId: string }
+}
+const Stack = createNativeStackNavigator<RootStackParamList>()
+
+function LibraryScreen({ navigation }: { navigation: any }) {
+  const [stories, setStories] = useState<Story[]>([])
   useEffect(() => {
-    // Local dev content service
-    fetch('http://localhost:4001/stories')
+    // Local dev content service (host-resolved via Expo env config)
+    fetch(`${API.contentBaseUrl}/stories`)
       .then((r) => r.json())
       .then(setStories)
       .catch(() => setStories([]))
   }, [])
   return (
     <View style={{ flex: 1 }}>
-      <FlatList
+      <FlatList<Story>
         data={stories}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+        keyExtractor={(item: Story) => item.id}
+        renderItem={({ item }: { item: Story }) => (
           <Pressable
             onPress={() => {
               Analytics.track({
                 name: 'open_story',
                 props: { storyId: item.id }
               })
-              navigation.navigate('StoryDetail', { storyId: item.id })
+              navigation.navigate('Reader', { storyId: item.id })
             }}
             style={{
               padding: 16,
@@ -55,7 +69,7 @@ function LibraryScreen({ navigation }: any) {
   )
 }
 
-function StoryDetailScreen() {
+function StoryDetailScreen(): JSX.Element {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Text>Story Detail</Text>
@@ -63,15 +77,65 @@ function StoryDetailScreen() {
   )
 }
 
-function ReaderScreen({ route }: any) {
-  const { storyId } = route.params ?? {}
-  const [last, setLast] = useState<any>(null)
+type ReaderProps = { route: { params: { storyId: string } } }
+function ReaderScreen({ route }: ReaderProps) {
+  const { storyId } = route.params
+  const [last, setLast] = useState<{
+    chapterId: string
+    nodeId: string
+  } | null>(null)
+  const [story, setStory] = useState<StoryDetail | null>(null)
+  const [state, setState] = useState<ReaderState | null>(null)
+  const [node, setNode] = useState<any>(null)
   useEffect(() => {
     let mounted = true
     ;(async () => {
       try {
-        const lr = await getLastRead(storyId)
+        const [lr, s] = await Promise.all([
+          getLastRead(storyId),
+          fetch(`${API.contentBaseUrl}/stories/${storyId}`).then((r) =>
+            r.json()
+          )
+        ])
+        if (!mounted) return
+        setStory(s)
         if (mounted) setLast(lr)
+        // Try server progress if no local state
+        let serverState: any = null
+        try {
+          const resp = await fetch(
+            `${API.progressBaseUrl}/progress/${DEV_USER_ID}/${storyId}`
+          )
+          if (resp.ok) serverState = await resp.json()
+        } catch {}
+        const base =
+          lr ||
+          (serverState
+            ? {
+                chapterId: serverState.chapterId,
+                nodeId: serverState.nodeId,
+                variables: serverState.variables
+              }
+            : null)
+        const initial: ReaderState = base
+          ? {
+              chapterId: base.chapterId,
+              nodeId: base.nodeId,
+              variables: (base as any).variables ?? {}
+            }
+          : {
+              chapterId: s.chapters?.[0]?.id ?? 'ch-1',
+              nodeId: s.chapters?.[0]?.nodes?.[0]?.id ?? 'n-1',
+              variables: {}
+            }
+        setState(initial)
+        const firstChapter = s.chapters?.find(
+          (c: any) => c.id === initial.chapterId
+        )
+        const firstNode = firstChapter?.nodes?.find(
+          (n: any) => n.id === initial.nodeId
+        )
+        setNode(firstNode ?? null)
       } catch (e) {
         Crash.capture(e, { where: 'ReaderScreen.getLastRead' })
       }
@@ -80,6 +144,15 @@ function ReaderScreen({ route }: any) {
       mounted = false
     }
   }, [storyId])
+  const onChoose = (choiceId?: string) => {
+    if (!story || !state) return
+    const next = sampleStep(story as any, state, choiceId)
+    if (!next) return
+    setState(next)
+    const ch = sampleFindChapter(story as any, next.chapterId)
+    const nn = ch?.nodes?.find((n: any) => n.id === next.nodeId)
+    setNode(nn ?? null)
+  }
   return (
     <View
       style={{
@@ -89,17 +162,63 @@ function ReaderScreen({ route }: any) {
         gap: 8
       }}
     >
-      <Text>Reader</Text>
+      <Text style={{ fontWeight: '600' }}>{story?.title ?? 'Reader'}</Text>
       <Text selectable>
         Last read: {last ? `${last.chapterId}#${last.nodeId}` : '—'}
       </Text>
+      {node?.image ? (
+        <Text style={{ padding: 12, textAlign: 'center' }}>
+          [Image] {String(node.image).split('/').pop()}
+        </Text>
+      ) : null}
+      {node?.speaker || node?.text ? (
+        <Text style={{ padding: 12, textAlign: 'center' }}>
+          {node?.speaker ? `${node.speaker}: ` : ''}
+          {node?.text ?? ''}
+        </Text>
+      ) : null}
+      {(node?.choices ?? []).map((c: any) => (
+        <Pressable
+          key={c.id}
+          onPress={() => {
+            onChoose(c.id)
+            Analytics.track({
+              name: 'choice_selected',
+              props: { storyId, choiceId: c.id }
+            })
+          }}
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderWidth: 1,
+            borderRadius: 6
+          }}
+        >
+          <Text>{c.text}</Text>
+        </Pressable>
+      ))}
+      {!node?.choices || node?.choices.length === 0 ? (
+        <Pressable
+          onPress={() => onChoose(undefined)}
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderWidth: 1,
+            borderRadius: 6
+          }}
+        >
+          <Text>Next</Text>
+        </Pressable>
+      ) : null}
       <Pressable
         onPress={async () => {
+          if (!state) return
           const payload = {
             storyId,
-            chapterId: 'ch-1',
-            nodeId: 'n-1',
-            updatedAt: Date.now()
+            chapterId: state.chapterId,
+            nodeId: state.nodeId,
+            updatedAt: Date.now(),
+            variables: state.variables
           }
           await setLastRead(payload)
           setLast(payload)
@@ -113,6 +232,38 @@ function ReaderScreen({ route }: any) {
         }}
       >
         <Text>Save last read</Text>
+      </Pressable>
+      <Pressable
+        onPress={async () => {
+          if (!state) return
+          try {
+            await fetch(`${API.progressBaseUrl}/progress`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: DEV_USER_ID,
+                storyId,
+                chapterId: state.chapterId,
+                nodeId: state.nodeId,
+                variables: state.variables
+              })
+            })
+            Analytics.track({
+              name: 'progress_saved_server',
+              props: { storyId }
+            })
+          } catch (e) {
+            Crash.capture(e as any, { where: 'ReaderScreen.saveServer' })
+          }
+        }}
+        style={{
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderWidth: 1,
+          borderRadius: 6
+        }}
+      >
+        <Text>Save to server</Text>
       </Pressable>
     </View>
   )
