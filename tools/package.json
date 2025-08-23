@@ -1,0 +1,14 @@
+{
+  "name": "storypath-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:story": "node validate-story.mjs schemas/sample-story.json",
+    "validate:file": "node validate-story.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}

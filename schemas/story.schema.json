@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StoryPack",
+  "type": "object",
+  "required": ["version", "story"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "story": {
+      "type": "object",
+      "required": ["id", "title", "genres", "chapters"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "cover": { "type": "string" },
+        "ageRating": {
+          "type": "string",
+          "enum": ["PG", "PG-13", "R", "Mature"]
+        },
+        "premiumModel": {
+          "type": "string",
+          "enum": ["free", "chapter", "full_unlock"]
+        },
+        "genres": { "type": "array", "items": { "type": "string" } },
+        "variables": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["type", "default"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["bool", "number", "string", "enum"]
+              },
+              "enum": { "type": "array", "items": { "type": "string" } },
+              "default": {}
+            }
+          }
+        },
+        "chapters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "index", "title", "nodes"],
+            "properties": {
+              "id": { "type": "string" },
+              "index": { "type": "integer", "minimum": 0 },
+              "title": { "type": "string" },
+              "premium": { "type": "boolean", "default": false },
+              "assets": { "type": "array", "items": { "type": "string" } },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "type"],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "type": {
+                      "type": "string",
+                      "enum": ["dialogue", "choice", "jump", "set", "image"]
+                    },
+                    "speaker": { "type": "string" },
+                    "text": { "type": "string" },
+                    "image": { "type": "string" },
+                    "conditions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["var", "op", "value"],
+                        "properties": {
+                          "var": { "type": "string" },
+                          "op": {
+                            "type": "string",
+                            "enum": [
+                              "eq",
+                              "ne",
+                              "gt",
+                              "lt",
+                              "ge",
+                              "le",
+                              "includes"
+                            ]
+                          },
+                          "value": {}
+                        }
+                      }
+                    },
+                    "effects": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["var", "op", "value"],
+                        "properties": {
+                          "var": { "type": "string" },
+                          "op": {
+                            "type": "string",
+                            "enum": [
+                              "set",
+                              "inc",
+                              "dec",
+                              "toggle",
+                              "add",
+                              "remove"
+                            ]
+                          },
+                          "value": {}
+                        }
+                      }
+                    },
+                    "choices": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["id", "text", "target"],
+                        "properties": {
+                          "id": { "type": "string" },
+                          "text": { "type": "string" },
+                          "target": { "type": "string" },
+                          "conditions": {
+                            "$ref": "#/properties/story/properties/chapters/items/properties/nodes/items/properties/conditions"
+                          },
+                          "effects": {
+                            "$ref": "#/properties/story/properties/chapters/items/properties/nodes/items/properties/effects"
+                          }
+                        }
+                      }
+                    },
+                    "target": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

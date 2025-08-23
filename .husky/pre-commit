@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+# Validate story JSON if any staged under schemas/
+CHANGED=$(git diff --cached --name-only | grep -E '^schemas/.*\.json$' || true)
+if [ -n "$CHANGED" ]; then
+	echo "Validating story JSON files..."
+	node tools/validate-story.mjs schemas/sample-story.json || exit 1
+fi
+
+# Run lint-staged (auto-fix)
+npx lint-staged

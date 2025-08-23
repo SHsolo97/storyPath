@@ -1,0 +1,124 @@
+{
+  "version": "1.0.0",
+  "story": {
+    "id": "mystery-noir-001",
+    "title": "Shadows on 5th Avenue",
+    "description": "A 1940s LA detective navigates lies and loyalties.",
+    "cover": "assets/covers/noir001.jpg",
+    "ageRating": "PG-13",
+    "premiumModel": "chapter",
+    "genres": ["mystery", "thriller", "noir"],
+    "variables": {
+      "trust_partner": { "type": "number", "default": 0 },
+      "visited_scene": {
+        "type": "enum",
+        "enum": ["none", "office", "crime_scene"],
+        "default": "none"
+      }
+    },
+    "chapters": [
+      {
+        "id": "ch1",
+        "index": 0,
+        "title": "The Call",
+        "premium": false,
+        "assets": ["assets/scenes/office.jpg", "assets/scenes/crimescene.jpg"],
+        "nodes": [
+          { "id": "n1", "type": "image", "image": "assets/scenes/office.jpg" },
+          {
+            "id": "n2",
+            "type": "dialogue",
+            "speaker": "Partner",
+            "text": "We have two leads. Where first?"
+          },
+          {
+            "id": "n3",
+            "type": "choice",
+            "choices": [
+              {
+                "id": "c1",
+                "text": "Interview the business partner",
+                "effects": [
+                  { "var": "visited_scene", "op": "set", "value": "office" }
+                ],
+                "target": "n4"
+              },
+              {
+                "id": "c2",
+                "text": "Examine the crime scene",
+                "effects": [
+                  {
+                    "var": "visited_scene",
+                    "op": "set",
+                    "value": "crime_scene"
+                  }
+                ],
+                "target": "n5"
+              }
+            ]
+          },
+          { "id": "n4", "type": "image", "image": "assets/scenes/office.jpg" },
+          {
+            "id": "n4a",
+            "type": "dialogue",
+            "speaker": "Partner",
+            "text": "You sure about this?"
+          },
+          {
+            "id": "n4b",
+            "type": "set",
+            "effects": [{ "var": "trust_partner", "op": "inc", "value": 1 }]
+          },
+          { "id": "n4c", "type": "jump", "target": "n6" },
+
+          {
+            "id": "n5",
+            "type": "image",
+            "image": "assets/scenes/crimescene.jpg"
+          },
+          {
+            "id": "n5a",
+            "type": "dialogue",
+            "speaker": "Narrator",
+            "text": "The alley reeks of fear and cheap cologne."
+          },
+          {
+            "id": "n5b",
+            "type": "set",
+            "effects": [{ "var": "trust_partner", "op": "dec", "value": 1 }]
+          },
+          { "id": "n5c", "type": "jump", "target": "n6" },
+
+          {
+            "id": "n6",
+            "type": "dialogue",
+            "speaker": "Partner",
+            "text": "We found something you should see."
+          }
+        ]
+      },
+      {
+        "id": "ch2",
+        "index": 1,
+        "title": "Crossroads",
+        "premium": true,
+        "assets": [],
+        "nodes": [
+          {
+            "id": "n1",
+            "type": "dialogue",
+            "speaker": "Narrator",
+            "text": "The plot thickens."
+          },
+          {
+            "id": "n2",
+            "type": "dialogue",
+            "speaker": "Partner",
+            "text": "I still don't trust your call.",
+            "conditions": [{ "var": "trust_partner", "op": "lt", "value": 0 }]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install tool deps
+        working-directory: tools
+        run: npm ci || npm install
+      - name: Validate sample story
+        run: node tools/validate-story.mjs schemas/sample-story.json
+      - name: Install backend gateway
+        working-directory: backend/gateway
+        run: npm ci || npm install
+      - name: Typecheck gateway
+        working-directory: backend/gateway
+        run: npx tsc -p tsconfig.json --noEmit
+      - name: Install content service
+        working-directory: backend/services/content
+        run: npm ci || npm install
+      - name: Typecheck content service
+        working-directory: backend/services/content
+        run: npx tsc -p tsconfig.json --noEmit
+      - name: Install progress service
+        working-directory: backend/services/progress
+        run: npm ci || npm install
+      - name: Typecheck progress service
+        working-directory: backend/services/progress
+        run: npx tsc -p tsconfig.json --noEmit

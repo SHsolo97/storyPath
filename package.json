@@ -1,0 +1,25 @@
+{
+  "name": "storypath-monorepo",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "backend/gateway",
+    "backend/services/*",
+    "mobile",
+    "tools"
+  ],
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "eslint": "^9.8.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,md}": [
+      "prettier --write"
+    ]
+  }
+}

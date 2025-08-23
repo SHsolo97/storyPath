@@ -1,0 +1,22 @@
+{
+  "name": "storypath-backend",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "services/*",
+    "gateway"
+  ],
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:studio": "prisma studio"
+  },
+  "devDependencies": {
+    "prisma": "^5.18.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  }
+}

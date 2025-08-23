@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+
+# Builds
+**/dist/
+**/build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
