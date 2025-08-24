@@ -29,21 +29,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
-      - name: Install dependencies (root)
-        env:
-          HUSKY: '0'
-        run: npm install --no-audit --no-fund
-
       - name: Install workspace dependencies
         env:
           HUSKY: '0'
-        run: npm --workspaces install --include-workspace-root --no-audit --no-fund
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3

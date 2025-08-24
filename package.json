@@ -12,16 +12,17 @@
     "prepare": "husky",
     "dev:db": "docker compose -f backend/docker-compose.yml up -d",
     "db:down": "docker compose -f backend/docker-compose.yml down -v",
-    "dev:content": "npm -w content run dev",
-    "dev:progress": "npm -w progress run dev",
-    "dev:backend": "npm-run-all -p dev:content dev:progress",
-    "dev:up": "npm-run-all -p dev:db dev:backend",
-    "smoke": "tsx tools/smoke.e2e.ts"
+    "dev:content": "pnpm --filter content dev",
+    "dev:progress": "pnpm --filter progress dev",
+    "dev:backend": "pnpm -r --parallel --filter content --filter progress dev",
+    "dev:up": "pnpm exec run-p dev:db dev:backend",
+    "smoke": "pnpm dlx tsx tools/smoke.e2e.ts"
   },
   "engines": {
     "node": ">=20 <23",
-    "npm": ">=9"
+    "pnpm": ">=8"
   },
+  "packageManager": "pnpm@9.0.0",
   "devDependencies": {
     "eslint": "^9.8.0",
     "husky": "^9.1.6",

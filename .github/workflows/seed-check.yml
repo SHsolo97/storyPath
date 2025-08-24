@@ -12,8 +12,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - name: Install deps
-        run: npm --workspaces install
+        env:
+          HUSKY: '0'
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
       - name: Start Postgres
         run: |
           docker run -d --name pg -e POSTGRES_USER=storypath -e POSTGRES_PASSWORD=storypath -e POSTGRES_DB=storypath -p 5432:5432 postgres:16-alpine
@@ -24,14 +31,14 @@ jobs:
             (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && echo connected && break
             echo waiting...; sleep 2
           done
-      - name: Run Prisma migrate and seed
+    - name: Run Prisma migrate and seed
         env:
           DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
         working-directory: backend
         run: |
-          npx prisma generate
-          npx prisma migrate deploy
-          npm run prisma:seed
+      pnpm exec prisma generate
+      pnpm exec prisma migrate deploy
+      pnpm run prisma:seed
       - name: Stop Postgres
         if: always()
         run: docker rm -f pg

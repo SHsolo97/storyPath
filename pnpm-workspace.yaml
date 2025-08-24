@@ -1,0 +1,6 @@
+packages:
+  - backend
+  - backend/gateway
+  - backend/services/*
+  - mobile
+  - tools

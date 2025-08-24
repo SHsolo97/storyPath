@@ -13,37 +13,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install tool deps
-        working-directory: tools
+          cache: 'pnpm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install dependencies (workspace)
         env:
           HUSKY: '0'
-        run: npm install --no-audit --no-fund
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
       - name: Validate sample story
         run: node tools/validate-story.mjs schemas/sample-story.json
-      - name: Install backend gateway
-        working-directory: backend/gateway
-        env:
-          HUSKY: '0'
-        run: npm install --no-audit --no-fund
       - name: Typecheck gateway
         working-directory: backend/gateway
-        run: npx tsc -p tsconfig.json --noEmit
-      - name: Install content service
-        working-directory: backend/services/content
-        env:
-          HUSKY: '0'
-        run: npm install --no-audit --no-fund
+        run: pnpm exec tsc -p tsconfig.json --noEmit
       - name: Typecheck content service
         working-directory: backend/services/content
-        run: npx tsc -p tsconfig.json --noEmit
-      - name: Install progress service
-        working-directory: backend/services/progress
-        env:
-          HUSKY: '0'
-        run: npm install --no-audit --no-fund
+        run: pnpm exec tsc -p tsconfig.json --noEmit
       - name: Typecheck progress service
         working-directory: backend/services/progress
-        run: npx tsc -p tsconfig.json --noEmit
+        run: pnpm exec tsc -p tsconfig.json --noEmit
 
   smoke:
     runs-on: ubuntu-latest
@@ -66,31 +55,36 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - name: Install all workspaces
         env:
           HUSKY: '0'
-        run: npm --workspaces install --include-workspace-root --no-audit --no-fund
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
       - name: Generate Prisma client
         working-directory: backend
-        run: npx prisma generate
+        run: pnpm exec prisma generate
       - name: Apply migrations and seed
         working-directory: backend
         env:
           DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
         run: |
-          npx prisma migrate deploy
-          npm run prisma:seed
+          pnpm exec prisma migrate deploy
+          pnpm run prisma:seed
       - name: Start content service
         env:
           PORT: 4001
         run: |
-          nohup npm -w content run start &
+          nohup pnpm --filter content start &
       - name: Start progress service
         env:
           PORT: 4002
           DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
         run: |
-          nohup npm -w progress run start &
+          nohup pnpm --filter progress start &
       - name: Wait for services
         run: |
           for i in {1..30}; do
@@ -101,4 +95,4 @@ jobs:
         env:
           CONTENT_URL: http://127.0.0.1:4001
           PROGRESS_URL: http://127.0.0.1:4002
-        run: npx tsx tools/smoke.e2e.ts
+  run: pnpm dlx tsx tools/smoke.e2e.ts

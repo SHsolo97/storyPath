@@ -10,16 +10,17 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "node --loader ts-node/esm prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "engines": {
     "node": ">=20 <23",
-    "npm": ">=9"
+    "pnpm": ">=8"
   },
   "devDependencies": {
     "prisma": "^5.18.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "tsx": "^4.19.1"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0"
