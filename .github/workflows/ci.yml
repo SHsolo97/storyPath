@@ -41,6 +41,7 @@ jobs:
         run: pnpm exec tsc -p tsconfig.json --noEmit
 
   smoke:
+    needs: build
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -107,4 +108,4 @@ jobs:
         env:
           CONTENT_URL: http://127.0.0.1:4001
           PROGRESS_URL: http://127.0.0.1:4002
-  run: pnpm dlx tsx tools/smoke.e2e.ts
+        run: pnpm dlx tsx tools/smoke.e2e.ts
