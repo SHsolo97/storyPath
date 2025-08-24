@@ -21,6 +21,9 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@9.0.0 --activate
+      - name: Fallback install pnpm globally
+        run: |
+          if ! command -v pnpm >/dev/null 2>&1; then npm i -g pnpm@9; fi
       - name: Install deps
         env:
           HUSKY: '0'
