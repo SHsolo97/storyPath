@@ -20,7 +20,7 @@
   },
   "engines": {
     "node": ">=20 <23",
-    "pnpm": ">=8"
+    "pnpm": ">=9 <10"
   },
   "packageManager": "pnpm@9.0.0",
   "devDependencies": {
