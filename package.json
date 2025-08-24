@@ -16,7 +16,8 @@
     "dev:progress": "pnpm --filter progress dev",
     "dev:backend": "pnpm -r --parallel --filter content --filter progress dev",
     "dev:up": "pnpm exec run-p dev:db dev:backend",
-    "smoke": "pnpm dlx tsx tools/smoke.e2e.ts"
+    "smoke": "pnpm dlx tsx tools/smoke.e2e.ts",
+    "e2e:health": "pnpm dlx tsx tools/health.e2e.ts"
   },
   "engines": {
     "node": ">=20 <23",

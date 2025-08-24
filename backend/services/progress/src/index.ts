@@ -1,5 +1,5 @@
 import Fastify from 'fastify'
-import { PrismaClient, type Prisma } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import dotenv from 'dotenv'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,19 +24,23 @@ server.get('/progress/:userId/:storyId', async (req, reply) => {
 
 server.post('/progress', async (req, reply) => {
   try {
+    // JSON-compatible type to avoid Prisma.JsonValue dependency differences across versions
+    type JsonPrimitive = string | number | boolean | null
+    type JsonValue = JsonPrimitive | { [key: string]: JsonValue } | JsonValue[]
+
     const body = req.body as Partial<{
       userId: string
       storyId: string
       chapterId: string
       nodeId: string
-      variables: Prisma.JsonValue
+      variables: JsonValue
     }>
     // Basic input validation
     const required = ['userId', 'storyId', 'chapterId', 'nodeId'] as const
     for (const k of required) {
       if (!body[k]) return reply.code(400).send({ error: `Missing ${k}` })
     }
-    const variables: Prisma.JsonValue = body.variables ?? {}
+    const variables: JsonValue = body.variables ?? {}
 
     // Ensure the user exists (dev-friendly behavior)
     await prisma.user.upsert({

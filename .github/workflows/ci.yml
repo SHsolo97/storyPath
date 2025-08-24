@@ -101,6 +101,8 @@ jobs:
             curl -fsS http://127.0.0.1:4001/health && curl -fsS http://127.0.0.1:4002/health && break || true
             echo waiting...; sleep 2
           done
+      - name: Quick health e2e
+        run: pnpm run e2e:health
       - name: Run smoke test
         env:
           CONTENT_URL: http://127.0.0.1:4001
