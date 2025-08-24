@@ -17,6 +17,10 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
+      - name: Ensure pnpm via corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
       - name: Install deps
         env:
           HUSKY: '0'
@@ -31,14 +35,14 @@ jobs:
             (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && echo connected && break
             echo waiting...; sleep 2
           done
-    - name: Run Prisma migrate and seed
+      - name: Run Prisma migrate and seed
         env:
           DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
         working-directory: backend
         run: |
-      pnpm exec prisma generate
-      pnpm exec prisma migrate deploy
-      pnpm run prisma:seed
+          pnpm exec prisma generate
+          pnpm exec prisma migrate deploy
+          pnpm run prisma:seed
       - name: Stop Postgres
         if: always()
         run: docker rm -f pg
