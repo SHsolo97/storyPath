@@ -1,9 +1,9 @@
 name: ci
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -91,107 +91,6 @@ jobs:
           DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
         run: |
           nohup npm -w progress run start &
-      - name: Wait for services
-        run: |
-          for i in {1..30}; do
-            curl -fsS http://127.0.0.1:4001/health && curl -fsS http://127.0.0.1:4002/health && break || true
-            echo waiting...; sleep 2
-          done
-      - name: Run smoke test
-        env:
-          CONTENT_URL: http://127.0.0.1:4001
-          PROGRESS_URL: http://127.0.0.1:4002
-        run: npx tsx tools/smoke.e2e.tsname: ci
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-  - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install tool deps
-        working-directory: tools
-        env:
-          HUSKY: '0'
-  run: npm install --no-audit --no-fund
-      - name: Validate sample story
-        run: node tools/validate-story.mjs schemas/sample-story.json
-      - name: Install backend gateway
-        working-directory: backend/gateway
-        env:
-          HUSKY: '0'
-        run: npm install --no-audit --no-fund || true
-      - name: Typecheck gateway
-        working-directory: backend/gateway
-        run: npx tsc -p tsconfig.json --noEmit
-      - name: Install content service
-        working-directory: backend/services/content
-        env:
-          HUSKY: '0'
-        run: npm install --no-audit --no-fund
-      - name: Typecheck content service
-        working-directory: backend/services/content
-        run: npx tsc -p tsconfig.json --noEmit
-      - name: Install progress service
-        working-directory: backend/services/progress
-        env:
-          HUSKY: '0'
-  run: npm install --no-audit --no-fund
-      - name: Typecheck progress service
-        working-directory: backend/services/progress
-        run: npx tsc -p tsconfig.json --noEmit
-
-  smoke:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: storypath
-          POSTGRES_PASSWORD: storypath
-          POSTGRES_DB: storypath
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U storypath -d storypath"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
-    steps:
-  - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install all workspaces
-        env:
-          HUSKY: '0'
-        run: npm --workspaces install --include-workspace-root --no-audit --no-fund
-      - name: Generate Prisma client
-        working-directory: backend
-        run: npx prisma generate
-      - name: Apply migrations and seed
-        working-directory: backend
-        env:
-          DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
-        run: |
-          npx prisma migrate deploy
-          npm run prisma:seed
-      - name: Start content service
-        env:
-          PORT: 4001
-        run: npm -w content run start &
-      - name: Start progress service
-        env:
-          PORT: 4002
-          DATABASE_URL: postgresql://storypath:storypath@127.0.0.1:5432/storypath
-        run: npm -w progress run start &
       - name: Wait for services
         run: |
           for i in {1..30}; do
