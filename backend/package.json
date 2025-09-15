@@ -17,7 +17,7 @@
     "pnpm": ">=9 <10"
   },
   "devDependencies": {
-    "prisma": "^5.18.0",
+    "prisma": "^6.16.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "tsx": "^4.19.1"
