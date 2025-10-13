@@ -39,7 +39,7 @@ jobs:
           if ! command -v pnpm >/dev/null 2>&1; then npm i -g pnpm@9; fi
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
 
@@ -49,9 +49,9 @@ jobs:
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'
